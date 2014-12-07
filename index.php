@@ -49,7 +49,7 @@
 					<script>
 						setInterval(function(){
 							if (parseInt(document.getElementById("iframe0").contentWindow.document.body.innerHTML) >= '.$satoshi.') {
-								window.location.href = "?paid=true&expires='.$url.'";
+								window.location.href = "'.$url.'";
 							} else {
 								document.getElementById("iframe0").contentWindow.location.reload();
 							}
