@@ -41,7 +41,7 @@
 				$BTCaddress = json_decode(file_get_contents("https://blockchain.info/merchant/$bcGUID/new_address?password=$bcPWD"), true);
 				$BTCaddress = $BTCaddress[address];
 				$hamc = hash_hmac('sha256', "$expires-$product-$BTCaddress-$satoshi" , $bcPWD);
-				$url = "?paid&expires=$expires&BTCaddress=$BTCaddress&satoshi=$satoshi&product=$product&hmac=$hamc";
+				$url = "?paid=true&expires=$expires&BTCaddress=$BTCaddress&satoshi=$satoshi&product=$product&hmac=$hamc";
 				print("Send this ammount to $BTCaddress <br />");
 				print("Do not refresh or leave this page! <br />");
 				print('
