@@ -35,20 +35,20 @@
 			}
 			
 			if ($_GET["choice"]) {
-				$Satoshi = $BTCprice * 100;
+				$satoshi = $BTCprice * 100;
 				$expires = time() + 3600;
 				$product = $_GET["choice"];
-				$hamc = hash_hmac('sha256', "$expires-$product" , $bcPWD);
-				$url = "?paid&expires=$expires&product=$product&hmac=$hamc";
 				$BTCaddress = json_decode(file_get_contents("https://blockchain.info/merchant/$bcGUID/new_address?password=$bcPWD"), true);
 				$BTCaddress = $BTCaddress[address];
+				$hamc = hash_hmac('sha256', "$expires-$product-$BTCaddress-$satoshi" , $bcPWD);
+				$url = "?paid&expires=$expires&BTCaddress=$BTCaddress&satoshi=$satoshi&product=$product&hmac=$hamc";
 				print("Send this ammount to $BTCaddress <br />");
 				print("Do not refresh or leave this page! <br />");
 				print('
 					<iframe width="0" height="0" style="visibility:hidden;display:none" id="iframe0" src="?addressbalance='.$BTCaddress.'"></iframe>
 					<script>
 						setInterval(function(){
-							if (parseInt(document.getElementById("iframe0").contentWindow.document.body.innerHTML) >= '.$Satoshi.') {
+							if (parseInt(document.getElementById("iframe0").contentWindow.document.body.innerHTML) >= '.$satoshi.') {
 								window.location.href = "?paid=true&expires='.$url.'";
 							} else {
 								document.getElementById("iframe0").contentWindow.location.reload();
@@ -62,22 +62,28 @@
 			}
 			if ($_GET["paid"]){
 				$expires = $_GET["expires"];
+				$BTCaddress = $_GET["BTCaddress"];
+				$satoshi = $_GET["satoshi"];
 				$product = $_GET['product'];
 				$hamc = $_GET["hmac"];
 				if (time() > $expires) {
 					print("This URL has expired!");
 				} else {
-					if($hamc != hash_hmac('sha256', "$expires-$product" , $bcPWD)) {
+					if($hamc != hash_hmac('sha256', "$expires-$product-$BTCaddress-$satoshi" , $bcPWD)) {
 						print("Invalid URL!");
 					} else {
-						if ($product == "1") {
-							print ('<iframe width="560" height="315" src="//www.youtube.com/embed/My2FRPA3Gf8?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
-						}
-						if ($product == "2") {
-							print ('<iframe width="560" height="315" src="//www.youtube.com/embed/9bZkp7q19f0?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
-						}
-						if ($product == "3") {
-							print ('<iframe width="560" height="315" src="//www.youtube.com/embed/CevxZvSJLk8?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
+						if(intval(file_get_contents("https://blockchain.info/q/addressbalance/$BTCaddress?confirmations=0")) >= $satoshi) {
+							if ($product == "1") {
+								print ('<iframe width="560" height="315" src="//www.youtube.com/embed/My2FRPA3Gf8?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
+							}
+							if ($product == "2") {
+								print ('<iframe width="560" height="315" src="//www.youtube.com/embed/9bZkp7q19f0?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
+							}
+							if ($product == "3") {
+								print ('<iframe width="560" height="315" src="//www.youtube.com/embed/CevxZvSJLk8?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
+							}
+						} else {
+							print("Stop that!");
 						}
 					}
 				}
