@@ -1,6 +1,31 @@
 <?php
-	$bcGUID   = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
-	$bcPWD    = "xxxxxxxxxxx";
+	$bcGUID   = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"; //blockchain.info wallet identifier
+	$bcPWD    = "xxxxxxxxxxx";                          //blockchain.info password
+	
+	//curl with output JSON decoded
+	function curlJSON($elink){
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);  //verify blockchain.info SSL
+	curl_setopt($ch, CURLOPT_USERAGENT, true);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  
+	curl_setopt($ch, CURLOPT_URL, $elink);
+	$ccc = curl_exec($ch);
+	$json = json_decode($ccc, true);
+	return $json;
+	}
+	
+	//curl with string output
+	function curlFGC($elink){
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);  //verify blockchain.info SSL
+	curl_setopt($ch, CURLOPT_USERAGENT, true);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);  
+	curl_setopt($ch, CURLOPT_URL, $elink);
+	$ccc = curl_exec($ch);
+	return $ccc;
+	}
+	
+	
 ?>
 <html>
 	<body>
@@ -17,7 +42,7 @@
 				');
 			}
 			if ($_GET["choice"]) {																	// If they made any selection, 
-				$BTCprice = json_decode(file_get_contents("https://blockchain.info/ticker"), true);	// you need to know the btc price.
+				$BTCprice = curlJSON("https://blockchain.info/ticker");	// you need to know the btc price.
 			}
 			if ($_GET["choice"] == "1") {	// user selection 1
 				$USDprice = 0.15;
@@ -38,7 +63,7 @@
 				$satoshi = $BTCprice * 100;
 				$expires = time() + 3600;	// make the generated url only valid for an hour
 				$product = $_GET["choice"];
-				$BTCaddress = json_decode(file_get_contents("https://blockchain.info/merchant/$bcGUID/new_address?password=$bcPWD"), true);		// we request a new bitcoin address for our wallet
+				$BTCaddress = curlJSON("https://blockchain.info/merchant/$bcGUID/new_address?password=$bcPWD");		// we request a new bitcoin address for our wallet
 				$BTCaddress = $BTCaddress[address];
 				$hamc = hash_hmac('sha256', "$expires-$product-$BTCaddress-$satoshi" , $bcPWD);	// to make sure the URL is not manipulated
 				$url = "?paid=true&expires=$expires&BTCaddress=$BTCaddress&satoshi=$satoshi&product=$product&hmac=$hamc";	// this URL has all the info we want to verify in it and is secured by HMAC
@@ -60,7 +85,7 @@
 				');
 			}
 			if ($_GET["addressbalance"]){	// this is a workaround for the fact that you can't read the contents of an iframe from an external domain using javascript
-				print(file_get_contents("https://blockchain.info/q/addressbalance/".$_GET["addressbalance"]."?confirmations=0"));
+				print(curlFGC("https://blockchain.info/q/addressbalance/".$_GET["addressbalance"]."?confirmations=0"));
 			}
 			if ($_GET["paid"]){
 				$expires = $_GET["expires"];
@@ -74,7 +99,7 @@
 					if($hamc != hash_hmac('sha256', "$expires-$product-$BTCaddress-$satoshi" , $bcPWD)) {	// make sure the URL is not manipulated
 						print("Invalid URL!");
 					} else {
-						if(intval(file_get_contents("https://blockchain.info/q/addressbalance/$BTCaddress?confirmations=0")) >= $satoshi) {	// make sure they actually paid
+						if(intval(curlFGC("https://blockchain.info/q/addressbalance/$BTCaddress?confirmations=0")) >= $satoshi) {	// make sure they actually paid
 							if ($product == "1") {
 								print ('<iframe width="560" height="315" src="//www.youtube.com/embed/My2FRPA3Gf8?list=PLirAqAtl_h2r5g8xGajEwdXd3x1sZh8hC" frameborder="0" allowfullscreen></iframe>');
 							}
